@@ -48,23 +48,22 @@ celery -A celery_app worker --loglevel=info --pool=solo
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### 📚 Endpoints da API
-### Livros
+Livros
+Método	Endpoint	Descrição
+GET	/listar-livros-com-cache	Lista livros com cache
+GET	/listar-livros-sem-cache	Lista livros sem cache
+POST	/adicionar-livro	Adiciona novo livro
+PUT	/atualizar-livro/{id}	Atualiza livro
+DELETE	/deletar-livro/{id}	Remove livro
 
-Método	Endpoint	                Descrição
-GET	    /listar-livros-com-cache	Lista livros com cache
-GET	    /listar-livros-sem-cache	Lista livros sem cache
-POST	  /adicionar-livro	        Adiciona novo livro
-PUT	    /atualizar-livro/{id}	    Atualiza livro
-DELETE	/deletar-livro/{id}	      Remove livro
+Cache
+Método	Endpoint	Descrição
+GET	/status-cache	Status do Redis
+GET	/ver-cache	Conteúdo do cache
+DELETE	/limpar-cache	Limpa cache
 
-### Cache
-Método	Endpoint	     Descrição
-GET	    /status-cache	 Status do Redis
-GET	    /ver-cache	   Conteúdo do cache
-DELETE	/limpar-cache	 Limpa cache
-
-### Tarefas
-Método	Endpoint	                  Descrição
-POST	  /disparar-soma	            Tarefa de soma
-POST	  /disparar-fatorial	        Tarefa de fatorial
-GET	    /status-tarefa/{task_id}	  Status da tarefa
+Tarefas
+Método	Endpoint	Descrição
+POST	/disparar-soma	Tarefa de soma
+POST	/disparar-fatorial	Tarefa de fatorial
+GET	/status-tarefa/{task_id}	Status da tarefa
