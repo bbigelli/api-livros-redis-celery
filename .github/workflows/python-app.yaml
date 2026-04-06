@@ -3,13 +3,16 @@ name: CI/CD Pipeline for FastAPI
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
     
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
@@ -21,16 +24,27 @@ jobs:
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     
     - name: Install dependencies
       run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip
+        pip install fastapi uvicorn redis celery httpx pytest pytest-cov
     
     - name: Run tests
       run: |
-        pytest -v --tb=short
+        python -m pytest testes/ -v --tb=short
+      env:
+        PYTHONPATH: .
     
-    - name: Verify imports
+    - name: Verify application imports
       run: |
-        python -c "from fastapi.testclient import TestClient; print('✅ TestClient works')"
+        python -c "import sys; sys.path.insert(0, '.'); from main import app; print('✅ App imported successfully')"
+    
+    - name: Check application structure
+      run: |
+        echo "📁 Project structure:"
+        ls -la
+        echo "\n📁 Testes directory:"
+        ls -la testes/ || echo "No testes directory"
