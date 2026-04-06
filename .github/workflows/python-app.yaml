@@ -21,10 +21,12 @@ jobs:
       with:
         python-version: "3.9"
 
-    # 3. Instalar Poetry via pip (SOLUÇÃO MAIS ESTÁVEL)
+    # 3. Instalar Poetry com pip e verificar instalação
     - name: Install Poetry
       run: |
+        python -m pip install --upgrade pip
         pip install poetry==1.7.1
+        poetry --version  # Verifica se instalou corretamente
 
     # 4. Configurar cache do Poetry
     - name: Cache Poetry dependencies
@@ -35,22 +37,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-poetry-
 
-    # 5. Configurar Poetry para não criar virtualenv (opcional, melhora performance)
-    - name: Configure Poetry
-      run: |
-        poetry config virtualenvs.create false
-
-    # 6. Instalar dependências
+    # 5. Instalar dependências (sem configurar virtualenv)
     - name: Install dependencies
       run: |
-        poetry install --no-root --no-interaction
+        poetry install --no-interaction
 
-    # 7. Rodar testes
+    # 6. Rodar testes
     - name: Run tests
       run: |
         poetry run pytest --maxfail=1 --disable-warnings -v
 
-    # 8. Build da aplicação
+    # 7. Build da aplicação
     - name: Build application
       run: |
         poetry build
