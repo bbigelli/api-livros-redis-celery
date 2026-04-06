@@ -25,6 +25,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
 # ==================== MODELOS DE DADOS ====================
 class Livro(BaseModel):
     """Modelo principal de um livro"""
@@ -130,6 +131,13 @@ async def encontrar_livro_por_id(livro_id: int) -> Optional[Livro]:
         if livro.id == livro_id:
             return livro
     return None
+
+
+# ==================== ENDPOINT DE TESTE ====================
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
 
 # ==================== ENDPOINTS DE LIVROS ====================
 
@@ -379,6 +387,50 @@ async def verificar_status_tarefa(task_id: int):
             "status": estado,
             "mensagem": f"Estado: {estado}"
         }
+    
+# ==================== AUTENTICAÇÃO ====================
+# Usuário fixo para autenticação
+USUARIO_FIXO = {
+    "email": "admin@exemplo.com",
+    "senha": "123456"
+}
+
+class LoginRequest(BaseModel):
+    """Modelo para requisição de login"""
+    email: str = Field(..., description="Email do usuário")
+    senha: str = Field(..., description="Senha do usuário")
+
+class LoginResponse(BaseModel):
+    """Modelo de resposta para login"""
+    sucesso: bool
+    mensagem: str
+    token: Optional[str] = None
+
+@app.post("/auth/login", response_model=LoginResponse, tags=["Autenticação"])
+async def fazer_login(credenciais: LoginRequest):
+    """
+    Endpoint de autenticação de usuários.
+    Verifica se as credenciais fornecidas são válidas.
+    """
+    # Verifica se as credenciais estão corretas
+    if credenciais.email == USUARIO_FIXO["email"] and credenciais.senha == USUARIO_FIXO["senha"]:
+        # Gera um token simples (em produção use JWT)
+        import hashlib
+        import time
+        
+        token_data = f"{credenciais.email}:{time.time()}"
+        token = hashlib.sha256(token_data.encode()).hexdigest()
+        
+        return LoginResponse(
+            sucesso=True,
+            mensagem="Login realizado com sucesso",
+            token=token
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas. Verifique seu email e senha."
+        )
 
 # ==================== ENDPOINT RAIZ ====================
 @app.get("/")
@@ -405,6 +457,9 @@ async def root():
                 "POST /disparar-soma",
                 "POST /disparar-fatorial",
                 "GET /status-tarefa/{task_id}"
+            ],
+            "autenticação": [
+                "POST /auth/login"
             ]
         }
     }

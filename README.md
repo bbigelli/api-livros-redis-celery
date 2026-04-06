@@ -68,3 +68,37 @@ Método	Endpoint	                  Descrição
 POST	  /disparar-soma	            Tarefa de soma
 POST	  /disparar-fatorial	        Tarefa de fatorial
 GET	    /status-tarefa/{task_id}	  Status da tarefa
+
+# Ambiente Kafka com Docker Compose
+
+Este projeto configura um ambiente completo para desenvolvimento com Apache Kafka usando Docker Compose.
+
+## 📋 Serviços Incluídos
+
+| Serviço | Imagem | Porta | Descrição |
+|---------|--------|------|-----------|
+| **ZooKeeper** | confluentinc/cp-zookeeper | 2181 | Serviço de coordenação necessário para o Kafka |
+| **Kafka** | confluentinc/cp-kafka | 9092 | Broker de mensagens para streaming de dados |
+| **Kafka-UI** | provectuslabs/kafka-ui | 8080 | Interface gráfica para gerenciamento e monitoramento |
+
+## 🚀 Pré-requisitos
+
+- Docker (versão 20.10 ou superior)
+- Docker Compose (versão 2.0 ou superior)
+
+## 📦 Como Executar
+
+### Passo 1: Clone ou baixe os arquivos
+Certifique-se de ter o arquivo `docker-compose.yml` na raiz do projeto.
+
+### Passo 2: Inicie os serviços
+
+docker-compose up -d
+
+### Passo 3: Verifique se os containers estão rodando
+
+docker ps
+
+### Passo 4: Acesse a interface do Kafka-UI
+
+http://localhost:8080

@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-livros
+  namespace: default
+  labels:
+    app: api-livros
+    tier: backend
+spec:
+  replicas: 2  # Número de pods
+  selector:
+    matchLabels:
+      app: api-livros
+  template:
+    metadata:
+      labels:
+        app: api-livros
+        tier: backend
+    spec:
+      containers:
+      - name: api-livros
+        image: api-livros:latest  # Altere para sua imagem Docker
+        imagePullPolicy: Never  # Use Always se estiver usando registry
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        # Configurações do Redis
+        - name: REDIS_HOST
+          value: "redis-service"  # Nome do service do Redis no Kubernetes
+        - name: REDIS_PORT
+          value: "6379"
+        # Configurações do Celery (usando Redis como broker)
+        - name: CELERY_BROKER_URL
+          value: "redis://redis-service:6379/0"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis-service:6379/0"
+        # Recursos solicitados e limites
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      # Se precisar de pull secrets para registry privado
+      # imagePullSecrets:
+      # - name: docker-registry-secret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: api-livros:latest
+        imagePullPolicy: Never
+        command: ["celery"]
+        args: 
+          - "-A"
+          - "celery_app"
+          - "worker"
+          - "--loglevel=info"
+          - "--concurrency=1"
+          - "--pool=solo"
+        env:
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: PYTHONUNBUFFERED
+          value: "1"

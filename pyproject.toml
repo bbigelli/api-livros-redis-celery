@@ -6,7 +6,7 @@ authors = [
     {name = "BrunoBigelli",email = "bbigelli@hotmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi (>=0.116.0,<0.117.0)",
     "sqlalchemy (>=2.0.41,<3.0.0)",
@@ -17,3 +17,10 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+httpx = "^0.24.0"  # para TestClient do FastAPI
