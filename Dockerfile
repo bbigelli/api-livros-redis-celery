@@ -1,9 +1,8 @@
-# Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copiar requirements primeiro (para aproveitar cache do Docker)
+# Copiar requirements primeiro (para aproveitar cache)
 COPY requirements.txt .
 
 # Instalar dependências
@@ -16,4 +15,4 @@ COPY . .
 EXPOSE 8000
 
 # Comando para iniciar a API
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

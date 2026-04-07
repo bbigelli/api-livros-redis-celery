@@ -13,51 +13,58 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     
+    # Adicione serviços para testes
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
     # 1. Checkout do código
     - name: Checkout repository
       uses: actions/checkout@v4
     
-    # 2. Instalar Poetry (para testes)
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-    
-    # 3. Configurar Python
+    # 2. Configurar Python
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'poetry'
     
-    # 4. Instalar dependências com Poetry
+    # 3. Instalar dependências do requirements.txt
     - name: Install dependencies
       run: |
-        poetry install --no-interaction --no-root
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
     
-    # 5. Executar testes
+    # 4. Executar testes
     - name: Run tests
       run: |
-        poetry run pytest tests/ -v
+        pytest tests/ -v --cov=. --cov-report=xml
     
-    # 6. Construir imagem Docker (usando seu Dockerfile)
+    # 5. Construir imagem Docker
     - name: Build Docker image
       run: |
         docker build -t fastapi-app:latest .
     
-    # 7. Executar container para verificar se funciona
+    # 6. Executar container
     - name: Run Docker container
       run: |
         docker run -d --name fastapi-test -p 8000:8000 fastapi-app:latest
-        sleep 5  # Aguarda a aplicação iniciar
+        sleep 5
     
-    # 8. Testar se o container está respondendo
+    # 7. Testar se o container está respondendo
     - name: Test container health
       run: |
-        curl --fail http://localhost:8000/health || exit 1
+        curl --fail http://localhost:8000/ || exit 1
+        curl --fail http://localhost:8000/docs || exit 1
     
-    # 9. Limpeza (opcional, mas boa prática)
+    # 8. Limpeza
     - name: Clean up
       if: always()
       run: |
