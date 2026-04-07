@@ -13,18 +13,6 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     
-    # Adicione serviços para testes
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
     # 1. Checkout do código
     - name: Checkout repository
@@ -42,10 +30,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    # 4. Executar testes
+    # 4. Executar testes (pasta "testes")
     - name: Run tests
       run: |
-        pytest tests/ -v --cov=. --cov-report=xml
+        pytest testes/ -v --cov=. --cov-report=xml
     
     # 5. Construir imagem Docker
     - name: Build Docker image
