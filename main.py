@@ -139,6 +139,12 @@ async def encontrar_livro_por_id(livro_id: int) -> Optional[Livro]:
 def read_root():
     return {"message": "Hello World"}
 
+# ==================== ENDPOINTS DE HEALTHCHECK ====================
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 # ==================== ENDPOINTS DE LIVROS ====================
 
 @app.get("/listar-livros-com-cache", response_model=List[Livro], tags=["Livros"])

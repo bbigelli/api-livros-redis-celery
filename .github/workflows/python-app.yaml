@@ -1,50 +1,65 @@
-name: CI/CD Pipeline for FastAPI
+name: Python application with Docker build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-
+    
     steps:
+    # 1. Checkout do código
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
+    # 2. Instalar Poetry (para testes)
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    # 3. Configurar Python
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: '3.11'
+        cache: 'poetry'
     
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
+    # 4. Instalar dependências com Poetry
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install fastapi uvicorn redis celery httpx pytest pytest-cov
+        poetry install --no-interaction --no-root
     
+    # 5. Executar testes
     - name: Run tests
       run: |
-        python -m pytest testes/ -v --tb=short
-      env:
-        PYTHONPATH: .
+        poetry run pytest tests/ -v
     
-    - name: Verify application imports
+    # 6. Construir imagem Docker (usando seu Dockerfile)
+    - name: Build Docker image
       run: |
-        python -c "import sys; sys.path.insert(0, '.'); from main import app; print('✅ App imported successfully')"
+        docker build -t fastapi-app:latest .
     
-    - name: Check application structure
+    # 7. Executar container para verificar se funciona
+    - name: Run Docker container
       run: |
-        echo "📁 Project structure:"
-        ls -la
-        echo "\n📁 Testes directory:"
-        ls -la testes/ || echo "No testes directory"
+        docker run -d --name fastapi-test -p 8000:8000 fastapi-app:latest
+        sleep 5  # Aguarda a aplicação iniciar
+    
+    # 8. Testar se o container está respondendo
+    - name: Test container health
+      run: |
+        curl --fail http://localhost:8000/health || exit 1
+    
+    # 9. Limpeza (opcional, mas boa prática)
+    - name: Clean up
+      if: always()
+      run: |
+        docker stop fastapi-test || true
+        docker rm fastapi-test || true
