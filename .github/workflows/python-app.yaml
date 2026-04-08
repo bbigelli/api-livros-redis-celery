@@ -14,45 +14,51 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Checkout do código
+    # 1. Checkout do código (versão v3 conforme solicitado)
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
     
-    # 2. Configurar Python
+    # 2. Instalar Poetry
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    # 3. Configurar Python
     - name: Set up Python 3.11
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+        cache: 'poetry'
     
-    # 3. Instalar dependências do requirements.txt
-    - name: Install dependencies
+    # 4. Instalar dependências com Poetry
+    - name: Install dependencies with Poetry
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        poetry install --no-interaction --no-root
     
-    # 4. Executar testes (pasta "testes")
-    - name: Run tests
+    # 5. Executar testes com Poetry
+    - name: Run tests with Poetry
       run: |
-        pytest testes/ -v --cov=. --cov-report=xml
+        poetry run pytest testes/ -v --cov=. --cov-report=xml
     
-    # 5. Construir imagem Docker
+    # 6. Construir imagem Docker
     - name: Build Docker image
       run: |
         docker build -t fastapi-app:latest .
     
-    # 6. Executar container
+    # 7. Executar container
     - name: Run Docker container
       run: |
         docker run -d --name fastapi-test -p 8000:8000 fastapi-app:latest
         sleep 5
     
-    # 7. Testar se o container está respondendo
+    # 8. Testar se o container está respondendo
     - name: Test container health
       run: |
         curl --fail http://localhost:8000/ || exit 1
         curl --fail http://localhost:8000/docs || exit 1
     
-    # 8. Limpeza
+    # 9. Limpeza
     - name: Clean up
       if: always()
       run: |
