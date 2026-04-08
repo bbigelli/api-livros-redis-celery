@@ -29,36 +29,40 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-        cache: 'poetry'
     
-    # 4. Instalar dependências com Poetry
+    # 4. Gerar/Atualizar o poetry.lock (se necessário)
+    - name: Update poetry.lock
+      run: |
+        poetry lock --no-update || poetry lock
+    
+    # 5. Instalar dependências com Poetry
     - name: Install dependencies with Poetry
       run: |
         poetry install --no-interaction --no-root
     
-    # 5. Executar testes com Poetry
+    # 6. Executar testes com Poetry
     - name: Run tests with Poetry
       run: |
         poetry run pytest testes/ -v --cov=. --cov-report=xml
     
-    # 6. Construir imagem Docker
+    # 7. Construir imagem Docker
     - name: Build Docker image
       run: |
         docker build -t fastapi-app:latest .
     
-    # 7. Executar container
+    # 8. Executar container
     - name: Run Docker container
       run: |
         docker run -d --name fastapi-test -p 8000:8000 fastapi-app:latest
         sleep 5
     
-    # 8. Testar se o container está respondendo
+    # 9. Testar se o container está respondendo
     - name: Test container health
       run: |
         curl --fail http://localhost:8000/ || exit 1
         curl --fail http://localhost:8000/docs || exit 1
     
-    # 9. Limpeza
+    # 10. Limpeza
     - name: Clean up
       if: always()
       run: |
